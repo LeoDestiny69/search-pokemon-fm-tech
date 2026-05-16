@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# search-pokemon-fm-tech
 
-## Getting Started
+แอปค้นหาข้อมูล Pokémon สร้างด้วย Next.js + TypeScript + Apollo Client
 
-First, run the development server:
+## วิธีติดตั้งและรัน
 
 ```bash
+# 1. Clone repository
+git clone <your-repo-url>
+cd search-pokemon-fm-tech
+
+# 2. ติดตั้ง dependencies
+npm install
+
+# 3. รัน development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+เปิด [http://localhost:3000](http://localhost:3000) ในเบราว์เซอร์
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- ค้นหา Pokémon ด้วยชื่อ (sync กับ URL query param)
+- Reload หน้าแล้ว state ยังอยู่
+- แสดง Attacks (Fast + Special) และ Evolutions
+- กดชื่อ Evolution เพื่อดูข้อมูล Pokémon ตัวนั้น
+- จัดการ loading / error / not found / empty states
 
-## Learn More
+## เหตุผลในการเลือก Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+| Technology | เหตุผล |
+|---|---|
+| **Next.js (App Router)** | รองรับ file-based routing, Server/Client Components แยกกันชัดเจน, deploy บน Vercel ได้ทันที |
+| **TypeScript** | ช่วย type-check ข้อมูลจาก API ให้ถูกต้อง ลด runtime error |
+| **Apollo Client** | รองรับ GraphQL โดยตรง, มี InMemoryCache built-in, `useQuery` hook ใช้งานง่าย |
+| **CSS (global)** | ไม่ต้องการ library เพิ่ม, อ่านง่าย, control ได้เต็มที่ |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## วิธี Deploy บน Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Push โค้ดขึ้น GitHub (public repository)
+2. ไปที่ [vercel.com](https://vercel.com) → Import Git Repository
+3. เลือก repo นี้ → Deploy
+4. Vercel จะ detect Next.js อัตโนมัติ ไม่ต้องตั้งค่าเพิ่ม
 
-## Deploy on Vercel
+> **Note:** ไม่มี environment variables ที่ต้องตั้งค่า เพราะ GraphQL endpoint เป็น public API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## GraphQL API
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+ใช้ [graphql-pokemon2](https://graphql-pokemon2.vercel.app/) — public Pokemon GraphQL API
+
+```graphql
+query GetPokemon($name: String!) {
+  pokemon(name: $name) {
+    id, number, name, image, types
+    attacks { fast { name, type, damage } special { name, type, damage } }
+    evolutions { id, name, image }
+  }
+}
+```
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── layout.tsx      # Root layout + Providers
+│   ├── providers.tsx   # ApolloProvider (client component)
+│   ├── page.tsx        # หน้าหลัก — จัดการ all UI states
+│   └── globals.css     # Global styles
+├── components/
+│   ├── SearchInput.tsx  # Input + URL sync + debounce
+│   ├── PokemonCard.tsx  # Pokemon detail (pure display)
+│   ├── AttackList.tsx   # Fast/Special attacks table
+│   └── EvolutionList.tsx # Evolutions + navigate on click
+├── lib/
+│   ├── apolloClient.ts  # Apollo Client setup
+│   └── queries.ts       # GraphQL queries
+└── types/
+    └── pokemon.ts       # TypeScript types
+```
